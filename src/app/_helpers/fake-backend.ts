@@ -6,8 +6,12 @@ import { delay, mergeMap, materialize, dematerialize } from 'rxjs/operators';
 import { User, Role } from '@app/_models';
 
 const users: User[] = [
-    { id: 1, username: 'admin', password: 'admin', firstName: 'Admin', lastName: 'User', role: Role.Admin },
-    { id: 2, username: 'user', password: 'user', firstName: 'Normal', lastName: 'User', role: Role.User }
+    { id: 1, username: 'admin', password: '1234', firstName: 'Admin', lastName: 'User', role: Role.Admin },
+    // { id: 2, username: 'user', password: 'user', firstName: 'Normal', lastName: 'User', role: Role.User },
+    // { id: 3, username: 'poojasarda', password: 'Pass@123', firstName: 'Pooja', lastName: 'Sarda', role: Role.User },
+    // { id: 4, username: 'riteshsarda', password: 'Pass@123', firstName: 'Ritesh', lastName: 'Sarda', role: Role.User },
+    // { id: 5, username: 'DharaShah', password: 'Pass@123', firstName: 'Dhara', lastName: 'Shah', role: Role.User },
+    // { id: 6, username: 'ravinasarda', password: 'Pass@123', firstName: 'Ravina', lastName: 'Sarda', role: Role.User }
 ];
 
 @Injectable()
@@ -26,6 +30,8 @@ export class FakeBackendInterceptor implements HttpInterceptor {
             switch (true) {
                 case url.endsWith('/users/authenticate') && method === 'POST':
                     return authenticate();
+                case url.endsWith('/users/register') && method === 'POST':
+                    return register();
                 case url.endsWith('/users') && method === 'GET':
                     return getUsers();
                 case url.match(/\/users\/\d+$/) && method === 'GET':
@@ -51,6 +57,20 @@ export class FakeBackendInterceptor implements HttpInterceptor {
                 role: user.role,
                 token: `fake-jwt-token.${user.id}`
             });
+        }
+
+        function register() {
+            const user = body
+
+            if (users.find(x => x.username === user.username)) {
+                return error('Username "' + user.username + '" is already taken')
+            }
+
+            user.id = users.length ? Math.max(...users.map(x => x.id)) + 1 : 1;
+            users.push(user);
+            localStorage.setItem('users', JSON.stringify(users));
+
+            return ok(body);
         }
 
         function getUsers() {
